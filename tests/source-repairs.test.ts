@@ -1,11 +1,20 @@
 // Seed repair rewrites only the feed addresses this pack knows are broken. An address an admin already
 // changed stays as they left it, and a second run changes nothing.
 import assert from "node:assert/strict";
-import { after, test } from "node:test";
+import { after, before, test } from "node:test";
 import { closeDb, sql } from "@aihot/backend/db";
 import { repairKnownSources } from "../scripts/seed.ts";
 
-after(() => closeDb());
+const seededIds = [
+  "rss-ts-interpreting", "rss-phrase-blog", "rss-kudo", "web-gala-news", "rss-reddit-machinetranslation", "pod-troublesome-terps",
+];
+const clearSources = () => sql`DELETE FROM sources WHERE id IN ${sql(seededIds)}`;
+
+before(clearSources);
+after(async () => {
+  await clearSources();
+  await closeDb();
+});
 
 const oldJournal = "https://xionglingsong.github.io/rss-translation-studies/topic-interpreting.xml";
 const newJournal = "https://yileme.github.io/rss-translation-studies/topic-interpreting.xml";

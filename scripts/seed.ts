@@ -46,7 +46,7 @@ function byId(id: string): SeedSource | undefined {
   return sources.find((s) => s.id === id);
 }
 
-const redditSources = sources.filter((s) => s.config.minIntervalMinutes === 360 && String(s.config.feedUrl ?? "").includes("reddit.com"));
+const redditSources = sources.filter((s) => String(s.config.feedUrl ?? "").includes("reddit.com"));
 const redditStagger = new Map(redditSources.map((s, index) => [s.id, REDDIT_STAGGER_MINUTES[index % REDDIT_STAGGER_MINUTES.length] ?? 0]));
 
 /**
