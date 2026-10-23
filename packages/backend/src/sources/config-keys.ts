@@ -5,13 +5,13 @@ import type { SourceRow } from "./types.ts";
 
 // Rules applied in collect.ts to every kind read through collectSource.
 const PUBLISHER = ["publisherRole", "publisherUrlPrefixes"];
-const COLLECTED = [...PUBLISHER, "_aihot", "allowUrlPrefixes", "denyUrlPrefixes", "ingestNoiseFilter", "itemUrlPrefixRewrite", "sortByPublishedAt", "detail", "fetchPublicContent", "publishedAfter"];
+const COLLECTED = [...PUBLISHER, "_aihot", "allowUrlPrefixes", "denyUrlPrefixes", "ingestNoiseFilter", "itemUrlPrefixRewrite", "sortByPublishedAt", "detail", "fetchPublicContent", "publishedAfter", "minIntervalMinutes"];
 
 const KEYS: Record<SourceRow["kind"], string[]> = {
   rss: [...COLLECTED, "feedUrl", "summaryIsBody", "preserveUrlFragment", "allowCategories", "denyCategories"],
   web_list: [
     ...COLLECTED, "url", "baseUrl", "parseMode", "adapter", "cacheToleranceSeconds", "linksStartLine", "preserveUrlFragment",
-    "itemSelector", "linkSelector", "titleSelector", "publishedAtSelector", "publishedAtRegex", "publishedAtUtcOffset",
+    "itemSelector", "linkSelector", "titleSelector", "publishedAtSelector", "publishedAtRegex", "publishedAtUtcOffset", "publishedAtOrder",
   ],
   json_list: [
     ...COLLECTED, "url", "mode", "method", "headers", "bodyJson", "jsonKey", "windowVar", "itemsPath", "itemsObjectValues",
@@ -41,6 +41,7 @@ const VALUES: Record<string, string[]> = {
   publisherRole: ["organization", "person"],
   adapter: ["mimo_home"],
   parseMode: ["html", "markdown", "docusaurus_changelog", "intercom_changelog"],
+  publishedAtOrder: ["mdy"],
 };
 
 function utcInstant(value: unknown): boolean {
@@ -56,6 +57,7 @@ export function unsupportedConfig(kind: SourceRow["kind"], config: Record<string
   for (const [key, value] of Object.entries(config ?? {})) {
     if (!allowed.has(key)) out.push(key);
     else if (key === "publishedAfter" && !utcInstant(value)) out.push(key);
+    else if (key === "minIntervalMinutes" && !(Number.isInteger(value) && (value as number) >= 15 && (value as number) <= 1440)) out.push(key);
     else if (key === "publisherUrlPrefixes" && (!Array.isArray(value) || !value.every((v) => {
       if (typeof v !== "string") return false;
       try { const u = new URL(v); return /^https?:$/.test(u.protocol) && !u.username && !u.password && !u.search && !u.hash; } catch { return false; }

@@ -34,6 +34,18 @@ test("a date that carries its zone keeps it", () => {
 test("no date at all is null", () => {
   assert.equal(iso(""), null);
   assert.equal(iso("yesterday"), null);
+  assert.equal(iso("10/18/2026"), null);
+  assert.equal(iso("Date posted 10/18/2026"), null);
+});
+
+test("a source that prints month/day/year is read only when it says so", () => {
+  assert.equal(parseLooseDate("10/18/2026", "+00:00", "mdy")?.toISOString(), "2026-10-18T00:00:00.000Z");
+  assert.equal(parseLooseDate("Date posted10/18/2026", "+00:00", "mdy")?.toISOString(), "2026-10-18T00:00:00.000Z");
+  assert.equal(parseLooseDate("Date posted\n            10/08/2026", "+08:00", "mdy")?.toISOString(), "2026-10-07T16:00:00.000Z");
+  assert.equal(parseLooseDate("09/29/2026", "+00:00", "mdy")?.toISOString(), "2026-09-29T00:00:00.000Z");
+  assert.equal(parseLooseDate("02/30/2026", "+00:00", "mdy"), null);
+  assert.equal(parseLooseDate("13/01/2026", "+00:00", "mdy"), null);
+  assert.equal(parseLooseDate("2026/10/18", "+00:00", "mdy")?.toISOString(), "2026-10-18T00:00:00.000Z");
 });
 
 test("English wall-clock dates are not shifted by the host's daylight-saving gap", () => {

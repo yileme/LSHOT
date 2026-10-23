@@ -18,6 +18,17 @@ after(async () => {
   await new Promise<void>((resolve) => server.close(() => resolve()));
 });
 
+test("GALA's month/day/year label is a date only when the source asks for that order", () => {
+  const card = `<div class="article col-xs-12 c-article-list"><a class="c-article-list-full-width__title" href="/news/example">A GALA note</a>` +
+    `<div class="c-article-list__date" aria-label="Date posted"><span class="sr-only">Date posted</span>10/18/2026</div></div>` +
+    `<div class="well box c-article-list"><a class="c-article-list-full-width__title" href="/news/wrapped">Wrapped</a></div>`;
+  const config = { url: "https://www.gala-global.org/news/", itemSelector: "div.article.c-article-list", linkSelector: "a.c-article-list-full-width__title", titleSelector: "a.c-article-list-full-width__title", publishedAtSelector: ".c-article-list__date", publishedAtUtcOffset: "+00:00" };
+  assert.equal(fromHtml(card, config.url, { config } as never)[0]!.publishedAt, null);
+  const dated = fromHtml(card, config.url, { config: { ...config, publishedAtOrder: "mdy" } } as never);
+  assert.deepEqual(dated.map((item) => item.url), ["https://www.gala-global.org/news/example"]);
+  assert.equal(dated[0]!.publishedAt?.toISOString(), "2026-10-18T00:00:00.000Z");
+});
+
 test("a listing uses the visible date when its tooltip is not a publication date", () => {
   const items = fromHtml(html, base, { config: { url: base, itemSelector: "article", publishedAtSelector: "span[title^='Unix:']", publishedAtUtcOffset: "+00:00" } } as never);
   assert.equal(items[0]!.publishedAt?.toISOString(), "2026-09-11T00:00:00.000Z");

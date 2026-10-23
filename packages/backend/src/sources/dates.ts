@@ -29,19 +29,24 @@ function atOffset(y: string | number, mo: string | number, d: string | number, h
  * on every host: a time with its zone, and an ISO date alone (UTC midnight). Anything else it would read
  * in the server's local zone (UTC in Docker), so "2026-09-26 10:00" is read in the source's offset instead.
  */
-export function parseLooseDate(value: string | null | undefined, utcOffset = "+08:00"): Date | null {
+export function parseLooseDate(value: string | null | undefined, utcOffset = "+08:00", order?: "mdy"): Date | null {
   if (!value) return null;
   const v = value.trim();
   if (!v) return null;
   const numeric = /(\d{4})[-/.年](\d{1,2})[-/.月](\d{1,2})日?(?:(?:T|\s*)(\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(v);
   if (numeric && !calendarDay(numeric[1]!, numeric[2]!, numeric[3]!)) return null;
+  // Month/day/year is ambiguous with day/month/year, so it is read only when the source says so.
+  // A screen-reader label can sit against the digits ("Date posted" + "10/18/2026"), so the date
+  // need not be its own word; a digit immediately before it still does not start a new date.
+  const mdy = order === "mdy" ? /(?<!\d)(\d{1,2})\/(\d{1,2})\/(\d{4})\b/.exec(v) : null;
+  if (mdy && !calendarDay(mdy[3]!, mdy[1]!, mdy[2]!)) return null;
   const english = /\b([a-z]{3,9})\s+(\d{1,2})(?:st|nd|rd|th)?[,]?\s+(\d{4})\b/i.exec(v)
     ?? /\b(\d{1,2})\s+([a-z]{3,9})\s+(\d{4})\b/i.exec(v)?.map((part, i, match) => i === 1 ? match[2]! : i === 2 ? match[1]! : part);
   if (english) {
     const month = Date.parse(`${english[1]} 1, ${english[3]} 00:00:00 GMT`);
     if (!Number.isFinite(month) || !calendarDay(english[3]!, new Date(month).getUTCMonth() + 1, english[2]!)) return null;
   }
-  if (!numeric && !english) return null;
+  if (!numeric && !english && !mdy) return null;
   const text = v.replace(/(\d)(st|nd|rd|th)\b/gi, "$1");
   if (EXPLICIT_ZONE.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v)) {
     const direct = Date.parse(text);
@@ -54,6 +59,7 @@ export function parseLooseDate(value: string | null | undefined, utcOffset = "+0
     const [, y, mo, d, h = "00", mi = "00", s = "00"] = m;
     return atOffset(y!, mo!, d!, h, mi, s, utcOffset);
   }
+  if (mdy) return atOffset(mdy[3]!, mdy[1]!, mdy[2]!, "00", "00", "00", utcOffset);
   // Parse English wall-clock fields in UTC so the host's daylight-saving rules cannot shift them.
   const en = Date.parse(`${text} GMT`);
   if (!Number.isFinite(en)) return null;

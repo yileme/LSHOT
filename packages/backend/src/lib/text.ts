@@ -77,6 +77,11 @@ export function stripTagMarkup(html: string, replacement = " "): string {
   return out;
 }
 
+function numericEntity(raw: string, code: number): string {
+  if (!Number.isInteger(code) || code < 1 || code > 0x10FFFF || (code >= 0xD800 && code <= 0xDFFF)) return raw;
+  return String.fromCodePoint(code);
+}
+
 export function stripTags(html: string): string {
   const text = html
     .replace(/<(script|style|noscript)[\s\S]*?<\/\1>/gi, " ")
@@ -89,7 +94,9 @@ export function stripTags(html: string): string {
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&quot;/g, '"')
-      .replace(/&#39;|&apos;/g, "'"),
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/&#(\d+);/g, (raw, digits: string) => numericEntity(raw, Number(digits)))
+      .replace(/&#x([0-9a-f]+);/gi, (raw, digits: string) => numericEntity(raw, Number.parseInt(digits, 16))),
   );
 }
 
