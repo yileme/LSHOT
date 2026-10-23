@@ -77,6 +77,10 @@ docker compose run --rm setup && docker compose up -d
 
 下面按时间从新到旧列出每次更新要注意的事。
 
+#### 信源地址修正（2026 年 10 月 23 日）
+
+没有新的数据库迁移。`scripts/seed.ts` 仍不覆盖管理员改过的信源；只有配置里还留着已经失效的旧地址时，才会改成当前 `industry/sources.json` 里的地址，并让这些信源马上再抓一次。受影响的是五条翻译学期刊主题流（GitHub Pages 从 `xionglingsong.github.io` 迁到 `yileme.github.io`）、Nimdzi、MultiLingual、Phrase 博客和 KUDO 博客。GALA 新闻列表补上月/日/年的日期读法。五条 Reddit 热帖补上下限 360 分钟，并把下次抓取错开几分钟。Troublesome Terps 的订阅返回 404（节目已在 2022 年结束），仍用这个地址的会被停用。已经改过这些地址的不受影响。不删除文章，不改全文许可。
+
 #### YouTube 字幕文件导入与长文翻译（2026 年 10 月 8 日）
 
 Mac 本地栈的 `lshot-start.sh` 将服务放进独立进程会话，避免 LaunchAgent 启动脚本退出时清理后台服务；健康检查失败也不会打印成功提示。

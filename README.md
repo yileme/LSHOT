@@ -51,7 +51,7 @@ Slator 和 CSA Research 出了新报告，要去翻它们的官网；Target 和 
 |---|---|---|
 | **行业分析机构** | CSA Research、Slator、Nimdzi | Top 100 榜单、市场规模、行业报告 |
 | **行业协会** | GALA、ATC、EUATC、中国翻译协会、国际译联 FIT | 年度调查、行业倡议、语言权利与政策动向 |
-| **翻译学期刊** | 24 本期刊的五条主题流 | 经 [rss-translation-studies](https://github.com/xionglingsong/rss-translation-studies) 增强，只收行业相关主题：数字与 AI 翻译、视听翻译、术语、口译、译者教育 |
+| **翻译学期刊** | 24 本期刊的五条主题流 | 经 [rss-translation-studies](https://github.com/yileme/rss-translation-studies) 增强，只收行业相关主题：数字与 AI 翻译、视听翻译、术语、口译、译者教育 |
 | **厂商与机构 X 账号** | 33 个 | Top-100 语言服务商的官方账号（DeepL、RWS、TransPerfect、LanguageWire、Smartling 等），用 Agent Reach 方法逐个验证 |
 | **社区与学术公告** | r/MachineTranslation、TRANSLATIO 学术邮件列表（JiscMail） | 海外从业者的真实讨论；翻译研究的岗位、CFP 与新书公告 |
 | **微信公众号** | 译了么、火山翻译、科大讯飞、网易有道等 | 国内一手信息（需极致了 key；译了么已接入按需启用，其余待补 ghid） |

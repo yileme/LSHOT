@@ -1,5 +1,5 @@
 {
-  "$comment": "示范信源：首次启动时导入（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里新建、修改和暂停。字段说明见 docs/customize.md。以下 RSS 地址均于 2026-10 实测可访问；国内厂商的一手信息多在公众号上，接入需要极致了（Dajiala）的 key，可在后台“信源”页自行补充。 公众号条目（mp_account）需要先在后端 .env 配 DAJIALA_KEY（极致了，按次计费），再在后台“信源”里把每个号的 ghid（公众号原始 ID）补上；极致了后台可按昵称搜到 ghid。未填 ghid 的号停在未配置状态，不产生计费请求。 翻译学期刊主题流来自站长自建的 rss-translation-studies（GitHub Pages，24 本刊的 DOI 增强订阅源），只接入行业相关的五条主题流；纯理论主题（综合翻译学/社会文化/认知过程）不进本站。 X 信源（x_search）需要 SOCIALDATA_API_KEY（SocialData，按量付费）才会抓取，未配置前显示抓取失败，不影响其他源；账号取自各公司官网页脚验证（Lilt/Lionbridge 为行业公认官方号）。领英无采集器支持，未纳入。 2026-10-07 用 Agent Reach 方法（Wikidata P2002 + 候选猜解 + twitter-cli 验证简介/官网/粉丝数）批量发现 Top-100 公司 X 账号，人工剔除假阳性后新增 20 家；X 源统一 T2 分级（官方号但内容多为宣传，高门槛防止营销刷屏精选）。 Reddit 走官方 .rss 通道（原生 rss 信源，间隔放宽到 6 小时防 429）。 行业机构：EUATC/ATC 为 WordPress 官方 RSS；GALA 官网新闻列表做 web_list；中国翻译协会走公众号（待 ghid）。AIIC/TAUS 官网为 JS 渲染暂无法采集，X 账号未验证待补。",
+  "$comment": "示范信源：首次启动时导入（scripts/seed.ts），已存在的不会被覆盖。之后在后台“信源”里新建、修改和暂停。字段说明见 docs/customize.md。以下 RSS 地址均于 2026-10 实测可访问；国内厂商的一手信息多在公众号上，接入需要极致了（Dajiala）的 key，可在后台“信源”页自行补充。 公众号条目（mp_account）需要先在后端 .env 配 DAJIALA_KEY（极致了，按次计费），再在后台“信源”里把每个号的 ghid（公众号原始 ID）补上；极致了后台可按昵称搜到 ghid。未填 ghid 的号停在未配置状态，不产生计费请求。 翻译学期刊主题流来自站长自建的 rss-translation-studies（仓库已迁到 yileme/rss-translation-studies，Pages 在 https://yileme.github.io/rss-translation-studies/ ；旧的 xionglingsong.github.io 地址整站 404）。24 本刊的 DOI 增强订阅源，只接入行业相关的五条主题流；纯理论主题（综合翻译学/社会文化/认知过程）不进本站。 X 信源（x_search）需要 SOCIALDATA_API_KEY（SocialData，按量付费）才会抓取，未配置前显示抓取失败，不影响其他源；账号取自各公司官网页脚验证（Lilt/Lionbridge 为行业公认官方号）。领英无采集器支持，未纳入。 2026-10-07 用 Agent Reach 方法（Wikidata P2002 + 候选猜解 + twitter-cli 验证简介/官网/粉丝数）批量发现 Top-100 公司 X 账号，人工剔除假阳性后新增 20 家；X 源统一 T2 分级（官方号但内容多为宣传，高门槛防止营销刷屏精选）。 Reddit 走官方 .rss 通道。匿名热帖大约每几秒只放行一次，连着抓会 429 且不给 Retry-After；每天自动调间隔又会把编辑类 RSS 压到 60 分钟以内，所以这五条设 minIntervalMinutes=360，种子修复时把下次抓取错开几分钟。Phrase 博客和 KUDO 博客的 /feed/ 已被站方改成跳到网页，改走 WordPress REST。Nimdzi 的 /feed/ 返回首页 HTML，改用 ?feed=rss2。MultiLingual 的 www 主机在 Cloudflare 挑战页后面，改用无 www 的订阅。Troublesome Terps 2022 年 4 月停播，Fireside 订阅返回 404，种子里停用。LocWorld 与 EUATC 的订阅从机房访问会碰到 Cloudflare / SiteGround 验证页，地址本身没改。 行业机构：EUATC/ATC 为 WordPress 官方 RSS；GALA 官网新闻列表做 web_list；中国翻译协会走公众号（待 ghid）。AIIC/TAUS 官网为 JS 渲染暂无法采集，X 账号未验证待补。",
   "sources": [
     {
       "id": "rss-google-translate-blog",
@@ -66,9 +66,14 @@
     {
       "id": "rss-phrase-blog",
       "name": "Phrase Blog",
-      "kind": "rss",
+      "kind": "json_list",
       "config": {
-        "feedUrl": "https://phrase.com/blog/feed/",
+        "url": "https://phrase.com/wp-json/wp/v2/posts?per_page=10",
+        "titlePaths": ["title.rendered"],
+        "urlTemplate": "{raw:link}",
+        "summaryPaths": ["excerpt.rendered"],
+        "publishedAtPath": "date_gmt",
+        "publishedAtUtcOffset": "+00:00",
         "_aihot": {
           "initialBackfillLimit": 8
         }
@@ -108,9 +113,14 @@
     {
       "id": "rss-kudo",
       "name": "KUDO Blog",
-      "kind": "rss",
+      "kind": "json_list",
       "config": {
-        "feedUrl": "https://www.kudo.ai/feed/",
+        "url": "https://kudo.ai/wp-json/wp/v2/posts?per_page=10",
+        "titlePaths": ["title.rendered"],
+        "urlTemplate": "{raw:link}",
+        "summaryPaths": ["excerpt.rendered"],
+        "publishedAtPath": "date_gmt",
+        "publishedAtUtcOffset": "+00:00",
         "_aihot": {
           "initialBackfillLimit": 8
         }
@@ -152,7 +162,7 @@
       "name": "MultiLingual",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://www.multilingual.com/feed/",
+        "feedUrl": "https://multilingual.com/feed/",
         "_aihot": {
           "initialBackfillLimit": 8
         }
@@ -173,7 +183,7 @@
       "name": "Nimdzi Insights",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://www.nimdzi.com/feed/",
+        "feedUrl": "https://www.nimdzi.com/?feed=rss2",
         "_aihot": {
           "initialBackfillLimit": 8
         }
@@ -335,7 +345,7 @@
       "name": "翻译学期刊 · 数字与 AI 翻译",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://xionglingsong.github.io/rss-translation-studies/topic-digital-ai-translation.xml",
+        "feedUrl": "https://yileme.github.io/rss-translation-studies/topic-digital-ai-translation.xml",
         "_aihot": {
           "initialBackfillLimit": 12
         }
@@ -356,7 +366,7 @@
       "name": "翻译学期刊 · 视听翻译（字幕配音）",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://xionglingsong.github.io/rss-translation-studies/topic-audiovisual-translation.xml",
+        "feedUrl": "https://yileme.github.io/rss-translation-studies/topic-audiovisual-translation.xml",
         "_aihot": {
           "initialBackfillLimit": 12
         }
@@ -377,7 +387,7 @@
       "name": "翻译学期刊 · 术语与专门用途翻译",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://xionglingsong.github.io/rss-translation-studies/topic-terminology-specialized-translation.xml",
+        "feedUrl": "https://yileme.github.io/rss-translation-studies/topic-terminology-specialized-translation.xml",
         "_aihot": {
           "initialBackfillLimit": 12
         }
@@ -398,7 +408,7 @@
       "name": "翻译学期刊 · 口译研究",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://xionglingsong.github.io/rss-translation-studies/topic-interpreting.xml",
+        "feedUrl": "https://yileme.github.io/rss-translation-studies/topic-interpreting.xml",
         "_aihot": {
           "initialBackfillLimit": 12
         }
@@ -419,7 +429,7 @@
       "name": "翻译学期刊 · 译者教育",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://xionglingsong.github.io/rss-translation-studies/topic-translator-education.xml",
+        "feedUrl": "https://yileme.github.io/rss-translation-studies/topic-translator-education.xml",
         "_aihot": {
           "initialBackfillLimit": 12
         }
@@ -1093,7 +1103,8 @@
       "name": "r/MachineTranslation 热帖",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://www.reddit.com/r/MachineTranslation/hot/.rss"
+        "feedUrl": "https://www.reddit.com/r/MachineTranslation/hot/.rss",
+        "minIntervalMinutes": 360
       },
       "tier": "T2",
       "owner_entity_id": null,
@@ -1111,7 +1122,8 @@
       "name": "r/translationstudies 热帖",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://www.reddit.com/r/translationstudies/hot/.rss"
+        "feedUrl": "https://www.reddit.com/r/translationstudies/hot/.rss",
+        "minIntervalMinutes": 360
       },
       "tier": "T2",
       "owner_entity_id": null,
@@ -1129,7 +1141,8 @@
       "name": "r/Localization 热帖",
       "kind": "rss",
       "config": {
-        "feedUrl": "https://www.reddit.com/r/Localization/hot/.rss"
+        "feedUrl": "https://www.reddit.com/r/Localization/hot/.rss",
+        "minIntervalMinutes": 360
       },
       "tier": "T2",
       "owner_entity_id": null,
@@ -1185,10 +1198,11 @@
       "config": {
         "url": "https://www.gala-global.org/news/",
         "parseMode": "html",
-        "itemSelector": "div.c-article-list",
+        "itemSelector": "div.article.c-article-list",
         "linkSelector": "a.c-article-list-full-width__title",
         "titleSelector": "a.c-article-list-full-width__title",
         "publishedAtSelector": ".c-article-list__date",
+        "publishedAtOrder": "mdy",
         "allowUrlPrefixes": [
           "https://www.gala-global.org/news/"
         ]
@@ -1570,7 +1584,8 @@
         "口译"
       ],
       "site_fulltext": false,
-      "syndicate_fulltext": false
+      "syndicate_fulltext": false,
+      "enabled": false
     },
     {
       "id": "pod-conversations",
@@ -1871,6 +1886,7 @@
       "kind": "rss",
       "config": {
         "feedUrl": "https://www.reddit.com/r/translator/hot/.rss",
+        "minIntervalMinutes": 360,
         "_aihot": {
           "initialBackfillLimit": 10
         }
@@ -1892,6 +1908,7 @@
       "kind": "rss",
       "config": {
         "feedUrl": "https://www.reddit.com/r/interpretation/hot/.rss",
+        "minIntervalMinutes": 360,
         "_aihot": {
           "initialBackfillLimit": 10
         }
