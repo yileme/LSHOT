@@ -374,6 +374,29 @@ const X_SHARD_MINUTES: Record<string, number> = { editorial: 30, hot_signal: 60 
 const shardMinutes = (mode: string) => X_SHARD_MINUTES[mode] ?? 60;
 
 /**
+ * How often a source is read after the daily adjustment. Busy free feeds move toward 15 minutes and
+ * quiet ones wait an hour; paid listings and X stop at two hours, hot signals at three. A source that
+ * sets minIntervalMinutes is never made faster than that (a host that refuses a burst, for example).
+ * Sharded X accounts keep the shard's pace.
+ */
+export function targetInterval(input: {
+  participationMode: string;
+  kind: string;
+  paidListing: boolean;
+  perDay: number;
+  sharded: boolean;
+  minIntervalMinutes?: unknown;
+}): number {
+  const requested = input.minIntervalMinutes;
+  const floor = typeof requested === "number" && Number.isInteger(requested) && requested >= 15 && requested <= 1440 ? requested : null;
+  const min = Math.max(input.paidListing ? 60 : 15, floor ?? 0);
+  let max = input.participationMode === "hot_signal" ? 180 : input.kind === "x_search" || input.paidListing ? 120 : 60;
+  if (!input.sharded && floor) max = Math.max(max, min);
+  if (input.sharded) return shardMinutes(input.participationMode);
+  return input.perDay <= 0.15 ? max : Math.round(Math.min(max, Math.max(min, (24 * 60) / (input.perDay * 3))));
+}
+
+/**
  * Daily: adapt each source's interval to its recent output (active 15 min … quiet 120 min).
  * hot_signal sources are allowed to be slower.
  */
@@ -384,15 +407,14 @@ export async function adaptIntervals(): Promise<{ updated: number }> {
     FROM sources s WHERE s.enabled AND s.kind IN ('rss', 'web_list', 'json_list', 'x_search')`;
   let updated = 0;
   for (const r of rows) {
-    const perDay = Number(r.per_day);
-    // Editorial sites and feeds are looked at hourly at least (they cost nothing);
-    // editorial X and listings read through Jina stop at two hours (paid per call, within their budgets);
-    // hot signals may wait longer.
-    const max = r.participation_mode === "hot_signal" ? 180 : r.kind === "x_search" || r.paid_listing ? 120 : 60;
-    // Listings read through Jina are not looked at more than hourly: busy ones would outrun its daily budget.
-    const min = r.paid_listing ? 60 : 15;
-    // X accounts read by shard follow the shard's pace, whatever their own volume.
-    const target = shardHandle(r) ? shardMinutes(r.participation_mode) : perDay <= 0.15 ? max : Math.round(Math.min(max, Math.max(min, (24 * 60) / (perDay * 3))));
+    const target = targetInterval({
+      participationMode: r.participation_mode,
+      kind: r.kind,
+      paidListing: r.paid_listing,
+      perDay: Number(r.per_day),
+      sharded: !!shardHandle(r),
+      minIntervalMinutes: r.config.minIntervalMinutes,
+    });
     const res = await sql`UPDATE sources SET interval_minutes = ${target} WHERE id = ${r.id} AND interval_minutes <> ${target}`;
     updated += res.count;
   }

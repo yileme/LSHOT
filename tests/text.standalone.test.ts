@@ -30,6 +30,8 @@ test("stripTags preserves existing spacing, entities, and hidden-content handlin
   assert.equal(stripTags("a<br>b"), "a b");
   assert.equal(stripTags("<script>hidden</script><style>hidden</style><noscript>hidden</noscript>visible"), "visible");
   assert.equal(stripTags("&nbsp;&amp; &lt;code&gt; &quot;text&quot; &#39;one&apos;"), '& <code> "text" \'one\'');
+  assert.equal(stripTags("The EU AI Act&#8217;s Bar for &#8220;Human Review&#8221;"), "The EU AI Act\u2019s Bar for \u201cHuman Review\u201d");
+  assert.equal(stripTags("&#x2019;"), "\u2019");
 });
 
 test("stripTags keeps existing handling of incomplete tags and unclosed attribute quotes", () => {

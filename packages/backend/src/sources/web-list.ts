@@ -13,9 +13,9 @@ import { FetchError, type Candidate, type SourceRow } from "./types.ts";
 const JINA_PREFIX = "https://r.jina.ai/";
 
 /** A date rule names one element; unrelated tooltips must not hide its visible publication date. */
-function elementDate(el: ReturnType<cheerio.CheerioAPI>, utcOffset?: string): Date | null {
+function elementDate(el: ReturnType<cheerio.CheerioAPI>, utcOffset?: string, order?: "mdy"): Date | null {
   for (const value of [el.attr("datetime"), el.attr("content"), el.attr("title"), el.text()]) {
-    const date = parseLooseDate(value, utcOffset);
+    const date = parseLooseDate(value, utcOffset, order);
     if (date) return date;
   }
   return null;
@@ -172,11 +172,11 @@ export function fromHtml(html: string, base: string, source: SourceRow): Candida
     let publishedAt: Date | null = null;
     if (c.publishedAtSelector) {
       const dateEl = el.find(c.publishedAtSelector).first();
-      publishedAt = elementDate(dateEl, c.publishedAtUtcOffset);
+      publishedAt = elementDate(dateEl, c.publishedAtUtcOffset, c.publishedAtOrder);
     }
     if (!publishedAt && c.publishedAtRegex) {
       const m = new RegExp(c.publishedAtRegex).exec($.html(el));
-      publishedAt = parseLooseDate(m?.[1], c.publishedAtUtcOffset);
+      publishedAt = parseLooseDate(m?.[1], c.publishedAtUtcOffset, c.publishedAtOrder);
     }
     seen.add(url);
     out.push({ url, title, publishedAt });
